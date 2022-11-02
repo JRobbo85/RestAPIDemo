@@ -1,12 +1,63 @@
 const User = require("./userModel")
+const jwt = require ("jsonwebtoken")
+
 
 exports.createUser = async (req, res) => {
     try{ 
         const newUser = await User.create(req.body);
-        res.status(201).send({user: newUser})
+        const token = await jwt.sign({_id: newUser._id}, process.env.SECRET)
+        res.status(201).send({user: "User has been created", token})
     }
     catch (error) {
         console.log(error)
         res.status(500).send({error: error.message})
+    }
+}
+
+exports.readUsers = async (req, res) => {
+    try{
+        const users = await User.find({})
+        res.status(200).send({user: users});
+    }
+    catch (error) {
+        console.log(error)
+        res.status(500).send({error: error.message})
+    }
+}
+
+exports.updateUser = async (req, res) => {
+    try{
+        await User.updateOne (
+            {username: req.body.username},
+            {[req.body.key]: req.body.value}
+        );
+        res.status(200).send({message: "Successfully Updated!"})
+
+    }
+    catch (error) {
+        console.log(error)
+        res.status(500).send({error: error.message})
+    }
+}
+
+exports.deleteUser = async (req, res) => {
+    try {
+        await User.deleteOne({username: req.params.username})
+        res.status(200).send({message: "User Deleted!"})
+    }
+    catch (error){
+        console.log(error)
+        res.status(500).send({error: error.message})
+    }
+}
+
+exports.loginUser = async (req, res) => {
+    try{
+        const token = await jwt.sign({_id: req.user._id}, process.env.SECRET)
+        res.status(200).send({user: req.user.username, token, message: "Successfully Logged In"})
+    }
+    catch (error){
+        console.log(error)
+        res.status(500).send({error: error.message})  
     }
 }
